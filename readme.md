@@ -181,7 +181,6 @@ Expertise:
 * Automation Tools
 * AI-Powered Business Solutions
 
-GitHub: https://github.com/haseebgb92
 
 ---
 
