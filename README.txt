@@ -1,58 +1,196 @@
-# Advertpreneur - Amazon.de Scraper
-# Setup and Run Instructions
-# ================================================
+# Amazon.de Scraper
 
-## ONE-TIME SETUP (run these once only)
+A professional Amazon Germany lead generation and seller research tool built for Amazon service providers, agencies, and consultants.
 
-Step 1 - Open a terminal / command prompt in this folder
+Developed by **Muhammad Haseeb**
+Founder, Advertpreneur
 
-Step 2 - Install Python dependencies:
-    pip install flask playwright
+---
 
-Step 3 - Install Playwright browsers:
-    playwright install chromium
+## Overview
 
-That is it. Setup done.
+Amazon.de Scraper is a Flask and Playwright powered application that automatically collects seller information from Amazon Germany search results.
 
-## RUNNING THE SCRAPER
+The tool captures both organic and sponsored listings, extracts seller details, and exports qualified leads into CSV format for outreach, research, and business development.
 
-Every time you want to use it:
+---
 
-    python app.py
+## Features
 
-Then open your browser and go to:
-    http://localhost:5000
+* Automated Amazon.de scraping
+* Real-time dashboard updates
+* Supports 1–5 pages per search
+* Captures Sponsored and Organic listings
+* Automatically skips Amazon-owned listings
+* CSV export functionality
+* Pre-configured Berlin delivery ZIP code (10115)
+* Service tagging for outreach campaigns
+* Browser automation powered by Playwright
 
-## HOW TO USE
+---
 
-1. Type your keyword in the search box (e.g. "tote bags")
-2. Select how many pages to scrape (1 to 5)
-3. Click Start Scraping
-4. A visible browser window will open and scrape automatically
-5. Results appear in the dashboard in real time
-6. Click Download CSV when done
+## Installation
 
-## COLUMN D - Service values for the email script
-    Amazon SEO
-    Listing Images
-    PPC
-    A+ Content
+### 1. Clone the Repository
 
-## NOTES
+```bash
+git clone https://github.com/haseebgb92/Amazon-DE-Scrapper.git
+cd Amazon-DE-Scrapper
+```
 
-- Berlin ZIP 10115 is set automatically
-- Sellers sold by Amazon are skipped automatically
-- Sponsored and Organic listings are both captured and tagged
-- CSV exports to the /exports folder inside this directory
-- Keep the terminal window open while using the scraper
-- Do not close the browser window that opens automatically
+### 2. Install Dependencies
 
-## FOLDER STRUCTURE
+```bash
+pip install flask playwright
+```
 
-    amazon_de_scraper/
-    |-- app.py           Main server (run this)
-    |-- scraper.py       Playwright scraping logic
-    |-- requirements.txt Dependencies
-    |-- templates/
-    |   |-- index.html   Dashboard UI
-    |-- exports/         CSV files saved here
+### 3. Install Playwright Browser
+
+```bash
+playwright install chromium
+```
+
+Installation is now complete.
+
+---
+
+## Running the Application
+
+Start the application:
+
+```bash
+python app.py
+```
+
+Open your browser and visit:
+
+```text
+http://localhost:5000
+```
+
+---
+
+## Usage
+
+### Step 1
+
+Enter an Amazon Germany keyword.
+
+Examples:
+
+* tote bags
+* water bottle
+* kitchen organizer
+* yoga mat
+
+### Step 2
+
+Choose the number of search result pages to scrape.
+
+Supported range:
+
+* 1 page
+* 2 pages
+* 3 pages
+* 4 pages
+* 5 pages
+
+### Step 3
+
+Click **Start Scraping**.
+
+A visible Chromium browser window will launch automatically and begin collecting data.
+
+### Step 4
+
+Monitor results in real time through the dashboard.
+
+### Step 5
+
+When scraping is complete, click **Download CSV** to export results.
+
+---
+
+## Service Categories
+
+The scraper automatically prepares service values that can be used in outreach workflows:
+
+* Amazon SEO
+* Listing Images
+* PPC Management
+* A+ Content
+
+---
+
+## Important Notes
+
+* Berlin ZIP Code **10115** is applied automatically.
+* Amazon Retail listings are excluded.
+* Sponsored listings are clearly tagged.
+* Organic listings are clearly tagged.
+* Exported CSV files are saved inside the `exports` directory.
+* Keep the terminal window running while scraping.
+* Do not manually close the browser window opened by Playwright.
+
+---
+
+## Project Structure
+
+```text
+amazon_de_scraper/
+│
+├── app.py
+│   └── Main Flask application
+│
+├── scraper.py
+│   └── Amazon scraping logic
+│
+├── requirements.txt
+│   └── Python dependencies
+│
+├── templates/
+│   └── index.html
+│       └── Dashboard interface
+│
+├── exports/
+│   └── Generated CSV files
+│
+└── README.md
+```
+
+---
+
+## Technology Stack
+
+* Python
+* Flask
+* Playwright
+* Chromium
+* HTML
+* JavaScript
+
+---
+
+## Author
+
+**Muhammad Haseeb**
+Founder & Lead Developer — Advertpreneur
+
+Specializing in:
+
+* Amazon SEO
+* Amazon PPC
+* A+ Content
+* Shopify Development
+* Automation Tools
+* AI-Powered Business Solutions
+
+---
+
+## License
+
+This project is proprietary software.
+
+Copyright © Muhammad Haseeb.
+
+All rights reserved.
