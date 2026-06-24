@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advertpreneur - Amazon.de Scraper</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #e4e7ec;
+    --border2: #d0d5dd;
+    --text: #101828;
+    --text2: #475467;
+    --text3: #98a2b3;
+    --accent: #f59e0b;
+    --accent-light: #fef3c7;
+    --accent-dark: #d97706;
+    --blue: #2563eb;
+    --blue-light: #eff6ff;
+    --green: #059669;
+    --green-light: #ecfdf5;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --orange: #ea580c;
+    --orange-light: #fff7ed;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+  }
+  .logo-dot {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .logo span { color: var(--text3); font-weight: 400; font-size: 13px; }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface2);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+  }
+  .status-pill.running { background: var(--accent-light); color: var(--accent-dark); border-color: var(--accent); }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: all 0.3s;
+  }
+  .status-pill.running .status-dot {
+    background: var(--accent-dark);
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* LAYOUT */
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 60px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .card-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+  }
+  .card-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .card-body { padding: 16px; }
+
+  /* FORM */
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+  input[type="text"], select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+  }
+  input[type="text"]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.12);
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .zip-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--green);
+    background: var(--green-light);
+    padding: 3px 8px;
+    border-radius: 20px;
+    margin-top: 6px;
+    border: 1px solid #a7f3d0;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.35); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-outline {
+    background: var(--surface);
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-outline:hover { background: var(--surface2); border-color: var(--border); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-green:hover { background: #047857; transform: translateY(-1px); }
+  .btn-green:disabled { background: var(--border2); color: var(--text3); cursor: not-allowed; transform: none; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+  }
+  .stat-label { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* PROGRESS */
+  .progress-wrap { margin-top: 4px; }
+  .progress-bar-bg {
+    background: var(--border);
+    border-radius: 20px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-dark));
+    border-radius: 20px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .progress-label { font-size: 11px; color: var(--text3); text-align: center; }
+
+  /* LOG */
+  .log-box {
+    background: #fafafa;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    height: 160px;
+    overflow-y: auto;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    scroll-behavior: smooth;
+  }
+  .log-line { margin-bottom: 4px; line-height: 1.5; }
+  .log-line.ok { color: var(--green); }
+  .log-line.warn { color: var(--orange); }
+  .log-line.info { color: var(--blue); }
+  .log-line.skip { color: var(--text3); }
+  .log-time { color: var(--text3); margin-right: 6px; }
+
+  /* MAIN */
+  .main { padding: 24px; overflow-x: auto; }
+  .main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .main-title { font-size: 18px; font-weight: 700; color: var(--text); }
+  .main-sub { font-size: 13px; color: var(--text3); margin-top: 2px; }
+  .main-actions { display: flex; gap: 8px; }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .table-toolbar {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .toolbar-left { display: flex; align-items: center; gap: 10px; }
+  .result-count {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .filter-tabs { display: flex; gap: 4px; }
+  .filter-tab {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .filter-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .search-input {
+    padding: 6px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    width: 200px;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  thead th {
+    background: var(--surface2);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+  }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafbfc; }
+  td {
+    padding: 10px 12px;
+    color: var(--text);
+    vertical-align: top;
+    max-width: 220px;
+  }
+  .td-title {
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+  }
+  .td-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .td-email { color: var(--blue); }
+  .td-address { max-width: 180px; font-size: 11px; color: var(--text2); line-height: 1.4; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .badge-sponsored { background: var(--orange-light); color: var(--orange); border: 1px solid #fed7aa; }
+  .badge-organic { background: var(--green-light); color: var(--green); border: 1px solid #a7f3d0; }
+  .badge-page { background: var(--blue-light); color: var(--blue); border: 1px solid #bfdbfe; font-size: 10px; padding: 2px 6px; }
+
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .empty-sub { font-size: 13px; }
+
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+  /* TABS */
+  .tab-nav {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+    padding-bottom: 0;
+  }
+  .tab-btn {
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text2);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent-dark); border-bottom-color: var(--accent); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* HISTORY TABLE */
+  .history-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .history-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .history-header:hover { background: #f0f2f5; }
+  .history-keyword { font-weight: 600; font-size: 14px; color: var(--text); }
+  .history-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .history-actions { display: flex; gap: 8px; align-items: center; }
+  .history-body { display: none; padding: 16px; overflow-x: auto; }
+  .history-body.open { display: block; }
+  .history-data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .history-data-table th {
+    background: var(--surface2);
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .history-data-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+  .history-data-table tr:last-child td { border-bottom: none; }
+  .history-data-table tr:hover td { background: #fafbfc; }
+  .btn-xs {
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-xs-green { background: var(--green); color: #fff; }
+  .btn-xs-green:hover { background: #047857; }
+  .btn-xs-amber { background: var(--accent); color: #fff; }
+  .btn-xs-amber:hover { background: var(--accent-dark); }
+  .btn-xs-red { background: #fee2e2; color: var(--red); border: 1px solid #fca5a5; }
+  .btn-xs-red:hover { background: #fca5a5; }
+  .history-empty { text-align:center; padding: 60px 20px; color: var(--text3); }
+
+  /* SETTINGS TABLE */
+  .settings-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .settings-table th {
+    background: var(--surface2);
+    padding: 9px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-table td {
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    max-width: none;
+  }
+  .settings-table tr:last-child td { border-bottom: none; }
+  .settings-table input[type="number"] {
+    width: 80px;
+    padding: 5px 8px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+  }
+  .settings-table select {
+    width: auto;
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .settings-note {
+    font-size: 12px;
+    color: var(--text3);
+    margin-top: 12px;
+    line-height: 1.6;
+    padding: 10px 14px;
+    background: var(--accent-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid #fde68a;
+    color: var(--accent-dark);
+  }
+  .btn-save-settings {
+    margin-top: 16px;
+    width: auto;
+    padding: 9px 24px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-dot">A</div>
+    Advertpreneur
+    <span>/ Amazon.de Scraper</span>
+  </div>
+  <div class="topbar-right">
+    <div class="status-pill" id="statusPill">
+      <div class="status-dot"></div>
+      <span id="statusText">Idle</span>
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- Search Config -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#fef3c7;">🔍</div>
+        Search Configuration
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Keyword(s)</label>
+          <input type="text" id="keyword" placeholder="tote bags, canvas bags, shopping bags" />
+          <div style="font-size:11px;color:var(--text3);margin-top:4px;">
+            Separate multiple keywords with commas
+          </div>
+          <div class="zip-badge" style="margin-top:5px;">
+            <span>📍</span> Berlin 10115 (auto-set)
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Pages to Scrape</label>
+          <select id="pages">
+            <option value="1">1 page (~48 products)</option>
+            <option value="2">2 pages (~96 products)</option>
+            <option value="3" selected>3 pages (~144 products)</option>
+            <option value="4">4 pages (~192 products)</option>
+            <option value="5">5 pages (~240 products)</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="startBtn" onclick="startScrape()">
+          <span>Start Scraping</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#eff6ff;">📊</div>
+        Session Stats
+      </div>
+      <div class="card-body">
+        <div id="kwProgressWrap" style="display:none;margin-bottom:12px;padding:8px 10px;background:var(--accent-light);border:1px solid #fde68a;border-radius:var(--radius-sm);">
+          <div style="font-size:11px;font-weight:600;color:var(--accent-dark);" id="kwProgressLabel">Keyword 1/1</div>
+          <div style="font-size:11px;color:var(--accent-dark);margin-top:2px;" id="kwProgressCurrent"></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-num" id="statTotal">0</div>
+            <div class="stat-label">Total Found</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statSponsored">0</div>
+            <div class="stat-label">Sponsored</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statOrganic">0</div>
+            <div class="stat-label">Organic</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-num" id="statEmails">0</div>
+            <div class="stat-label">Emails Found</div>
+          </div>
+        </div>
+        <div class="progress-wrap" style="margin-top:14px;">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressBar"></div>
+          </div>
+          <div class="progress-label" id="progressLabel">Ready</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon" style="background:#ecfdf5;">💾</div>
+        Export
+      </div>
+      <div class="card-body">
+
+        <p style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">Full Data</p>
+        <button class="btn btn-green" id="exportBtn" onclick="exportCSV()" disabled>
+          Download Full CSV
+        </button>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;margin-bottom:14px;">
+          All fields: ASIN, title, price, rating, seller info, country, service
+        </p>
+
+        <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>
+
+        <p style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:5px;">Gmail Bulk Mailer</p>
+        <button class="btn btn-primary" id="exportMailerBtn" onclick="exportBulkMailer()" disabled>
+          Export for Bulk Mailer
+        </button>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px;">
+          Name, Email, Store, Service only. Deduped by email. Ready to paste into Google Sheets.
+        </p>
+
+      </div>
+    </div>
+
+    <!-- Log -->
+    <div class="card" style="flex:1;">
+      <div class="card-header">
+        <div class="card-icon" style="background:#f5f3ff;">📋</div>
+        Activity Log
+      </div>
+      <div class="card-body" style="padding:10px;">
+        <div class="log-box" id="logBox">
+          <div class="log-line info"><span class="log-time">--:--</span>Ready. Enter a keyword to begin.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TAB NAV -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('results', this)">Scraped Results</button>
+      <button class="tab-btn" onclick="switchTab('history', this)">History</button>
+      <button class="tab-btn" onclick="switchTab('settings', this)">Service Rules</button>
+    </div>
+
+    <!-- TAB: RESULTS -->
+    <div class="tab-panel active" id="tab-results">
+      <div class="main-header">
+        <div>
+          <div class="main-title" style="font-size:15px;">Results</div>
+          <div class="main-sub" id="mainSub">No results yet. Run a search to get started.</div>
+        </div>
+        <div class="main-actions">
+          <input type="text" class="search-input" placeholder="Filter results..." oninput="filterTable(this.value)" id="tableSearch" />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-toolbar">
+          <div class="toolbar-left">
+            <span class="result-count" id="resultCount">0 sellers</span>
+            <div class="filter-tabs">
+              <div class="filter-tab active" onclick="setFilter('all', this)">All</div>
+              <div class="filter-tab" onclick="setFilter('Sponsored', this)">Sponsored</div>
+              <div class="filter-tab" onclick="setFilter('Organic', this)">Organic</div>
+              <div class="filter-tab" onclick="setFilter('email', this)">Has Email</div>
+            </div>
+          </div>
+        </div>
+        <div style="overflow-x:auto; max-height: calc(100vh - 260px); overflow-y:auto;">
+          <table id="resultsTable">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>ASIN</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Rating</th>
+                <th>Reviews</th>
+                <th>Seller Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Country</th>
+                <th>Products</th>
+                <th>Service</th>
+                <th>Page</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <tr>
+                <td colspan="14">
+                  <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <div class="empty-title">No results yet</div>
+                    <div class="empty-sub">Enter a keyword and click Start Scraping</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-panel" id="tab-history">
+      <div class="main-header">
+        <div>
+          <div class="main-title" style="font-size:15px;">Scrape History</div>
+          <div class="main-sub">All past scraping sessions stored locally. Click a session to expand results.</div>
+        </div>
+        <div class="main-actions">
+          <button class="btn btn-outline" style="width:auto;padding:7px 14px;font-size:12px;" onclick="loadHistory()">Refresh</button>
+        </div>
+      </div>
+      <div id="historyList">
+        <div class="history-empty">
+          <div style="font-size:36px;opacity:0.3;">🗄️</div>
+          <div style="font-size:15px;font-weight:600;color:var(--text2);margin-top:10px;">No history yet</div>
+          <div style="font-size:13px;margin-top:4px;">Run a scrape to start building your database</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SETTINGS -->
+    <div class="tab-panel" id="tab-settings">
+      <div class="main-header">
+        <div>
+          <div class="main-title" style="font-size:15px;">Service Suggestion Rules</div>
+          <div class="main-sub">Rules are checked top to bottom. First match wins. Changes apply to the next scrape.</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="settings-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Condition</th>
+              <th>Threshold</th>
+              <th>Suggested Service</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="color:var(--text3);font-size:12px;">1</td>
+              <td>Reviews fewer than</td>
+              <td><input type="number" id="rule_reviews_lt" value="50" min="0" /></td>
+              <td>
+                <select id="rule_reviews_lt_service">
+                  <option value="Listing Images" selected>Listing Images</option>
+                  <option value="Amazon SEO">Amazon SEO</option>
+                  <option value="PPC">PPC</option>
+                  <option value="A+ Content">A+ Content</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:var(--text3);font-size:12px;">2</td>
+              <td>Rating below</td>
+              <td><input type="number" id="rule_rating_lt" value="4.0" min="0" max="5" step="0.1" /></td>
+              <td>
+                <select id="rule_rating_lt_service">
+                  <option value="Amazon SEO" selected>Amazon SEO</option>
+                  <option value="Listing Images">Listing Images</option>
+                  <option value="PPC">PPC</option>
+                  <option value="A+ Content">A+ Content</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:var(--text3);font-size:12px;">3</td>
+              <td>Total products more than</td>
+              <td><input type="number" id="rule_products_gt" value="50" min="0" /></td>
+              <td>
+                <select id="rule_products_gt_service">
+                  <option value="PPC" selected>PPC</option>
+                  <option value="Amazon SEO">Amazon SEO</option>
+                  <option value="Listing Images">Listing Images</option>
+                  <option value="A+ Content">A+ Content</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:var(--text3);font-size:12px;">4</td>
+              <td>Reviews 50+ and rating 4.0+</td>
+              <td style="color:var(--text3);font-size:12px;">auto</td>
+              <td>
+                <select id="rule_good_service">
+                  <option value="A+ Content" selected>A+ Content</option>
+                  <option value="Amazon SEO">Amazon SEO</option>
+                  <option value="PPC">PPC</option>
+                  <option value="Listing Images">Listing Images</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td style="color:var(--text3);font-size:12px;">5</td>
+              <td>Default fallback</td>
+              <td style="color:var(--text3);font-size:12px;">always</td>
+              <td>
+                <select id="rule_default_service">
+                  <option value="Amazon SEO" selected>Amazon SEO</option>
+                  <option value="Listing Images">Listing Images</option>
+                  <option value="PPC">PPC</option>
+                  <option value="A+ Content">A+ Content</option>
+                </select>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="settings-note">
+        Rules are checked in order 1 to 5. The first rule that matches a seller wins.
+        Changes take effect on your next scrape run. The suggested service is written into
+        the CSV and the Bulk Mailer export automatically.
+      </div>
+
+      <button class="btn btn-primary btn-save-settings" onclick="saveSettings()">
+        Save Rules
+      </button>
+      <span id="saveConfirm" style="margin-left:12px;font-size:12px;color:var(--green);display:none;">Saved.</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let allResults = [];
+  let activeFilter = 'all';
+  let searchQuery = '';
+  let eventSource = null;
+
+  // ── DEFAULT RULES ──
+  const DEFAULT_RULES = {
+    reviews_lt: 50,
+    reviews_lt_service: 'Listing Images',
+    rating_lt: 4.0,
+    rating_lt_service: 'Amazon SEO',
+    products_gt: 50,
+    products_gt_service: 'PPC',
+    good_service: 'A+ Content',
+    default_service: 'Amazon SEO'
+  };
+
+  function loadSettings() {
+    try {
+      const saved = sessionStorage.getItem('adv_rules');
+      return saved ? JSON.parse(saved) : { ...DEFAULT_RULES };
+    } catch { return { ...DEFAULT_RULES }; }
+  }
+
+  function saveSettings() {
+    const rules = {
+      reviews_lt:          parseFloat(document.getElementById('rule_reviews_lt').value) || 50,
+      reviews_lt_service:  document.getElementById('rule_reviews_lt_service').value,
+      rating_lt:           parseFloat(document.getElementById('rule_rating_lt').value) || 4.0,
+      rating_lt_service:   document.getElementById('rule_rating_lt_service').value,
+      products_gt:         parseFloat(document.getElementById('rule_products_gt').value) || 50,
+      products_gt_service: document.getElementById('rule_products_gt_service').value,
+      good_service:        document.getElementById('rule_good_service').value,
+      default_service:     document.getElementById('rule_default_service').value,
+    };
+    sessionStorage.setItem('adv_rules', JSON.stringify(rules));
+    // Push rules to backend so next scrape uses them
+    fetch('/save_rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rules)
+    });
+    const confirm = document.getElementById('saveConfirm');
+    confirm.style.display = 'inline';
+    setTimeout(() => confirm.style.display = 'none', 2000);
+  }
+
+  function populateSettingsForm() {
+    const r = loadSettings();
+    document.getElementById('rule_reviews_lt').value = r.reviews_lt;
+    document.getElementById('rule_reviews_lt_service').value = r.reviews_lt_service;
+    document.getElementById('rule_rating_lt').value = r.rating_lt;
+    document.getElementById('rule_rating_lt_service').value = r.rating_lt_service;
+    document.getElementById('rule_products_gt').value = r.products_gt;
+    document.getElementById('rule_products_gt_service').value = r.products_gt_service;
+    document.getElementById('rule_good_service').value = r.good_service;
+    document.getElementById('rule_default_service').value = r.default_service;
+  }
+
+  function suggestServiceJS(reviews, totalProducts, rating) {
+    const r = loadSettings();
+    const rv  = parseInt(String(reviews).replace(/[^0-9]/g,'')) || 0;
+    const tp  = parseInt(String(totalProducts).replace(/[^0-9]/g,'')) || 0;
+    const rt  = parseFloat(String(rating).replace(',','.')) || 0;
+    if (rv > 0 && rv < r.reviews_lt)      return r.reviews_lt_service;
+    if (rt > 0 && rt < r.rating_lt)       return r.rating_lt_service;
+    if (tp > 0 && tp > r.products_gt)     return r.products_gt_service;
+    if (rv >= r.reviews_lt && rt >= r.rating_lt) return r.good_service;
+    return r.default_service;
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+    if (name === 'settings') populateSettingsForm();
+    if (name === 'history')  loadHistory();
+  }
+
+  // ── HISTORY ──
+
+  function loadHistory() {
+    fetch('/history/sessions')
+      .then(r => r.json())
+      .then(sessions => renderHistory(sessions))
+      .catch(() => {});
+  }
+
+  function renderHistory(sessions) {
+    const container = document.getElementById('historyList');
+    if (!sessions || sessions.length === 0) {
+      container.innerHTML = `<div class="history-empty">
+        <div style="font-size:36px;opacity:0.3;">🗄️</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text2);margin-top:10px;">No history yet</div>
+        <div style="font-size:13px;margin-top:4px;">Run a scrape to start building your database</div>
+      </div>`;
+      return;
+    }
+    container.innerHTML = sessions.map(s => `
+      <div class="history-card" id="hcard-${s.id}">
+        <div class="history-header" onclick="toggleSession(${s.id})">
+          <div>
+            <div class="history-keyword">🔍 ${s.keyword}</div>
+            <div class="history-meta">
+              ${s.total_found} sellers &nbsp;|&nbsp; ${s.pages} page(s) &nbsp;|&nbsp;
+              ${s.started_at || ''} &nbsp;|&nbsp; Session #${s.id}
+            </div>
+          </div>
+          <div class="history-actions" onclick="event.stopPropagation()">
+            <button class="btn-xs btn-xs-green" onclick="historyExport(${s.id})">Full CSV</button>
+            <button class="btn-xs btn-xs-amber" onclick="historyExportMailer(${s.id})">Bulk Mailer CSV</button>
+            <button class="btn-xs btn-xs-red" onclick="historyDelete(${s.id})">Delete</button>
+          </div>
+        </div>
+        <div class="history-body" id="hbody-${s.id}">
+          <div style="color:var(--text3);font-size:12px;padding:10px 0;">Click to load results...</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function toggleSession(id) {
+    const body = document.getElementById('hbody-' + id);
+    if (body.classList.contains('open')) {
+      body.classList.remove('open');
+      return;
+    }
+    body.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px 0;">Loading...</div>';
+    body.classList.add('open');
+    fetch('/history/results/' + id)
+      .then(r => r.json())
+      .then(rows => {
+        if (!rows || rows.length === 0) {
+          body.innerHTML = '<div style="color:var(--text3);font-size:12px;padding:10px 0;">No results found.</div>';
+          return;
+        }
+        body.innerHTML = `
+          <div style="overflow-x:auto;max-height:380px;overflow-y:auto;">
+          <table class="history-data-table">
+            <thead><tr>
+              <th>Type</th><th>ASIN</th><th>Title</th><th>Price</th>
+              <th>Rating</th><th>Reviews</th><th>Seller</th>
+              <th>Email</th><th>Phone</th><th>Country</th>
+              <th>Products</th><th>Service</th>
+            </tr></thead>
+            <tbody>
+              ${rows.map(r => `<tr>
+                <td><span class="badge ${r.listing_type==='Sponsored'?'badge-sponsored':'badge-organic'}">${r.listing_type||'-'}</span></td>
+                <td class="td-mono">${r.asin||'-'}</td>
+                <td title="${(r.title||'').replace(/"/g,'')}">${r.title||'-'}</td>
+                <td>${r.price||'-'}</td>
+                <td style="text-align:center;">${r.rating?'<b>'+r.rating+'</b>★':'-'}</td>
+                <td style="text-align:center;">${r.reviews?Number(r.reviews).toLocaleString():'-'}</td>
+                <td style="font-weight:500;">${r.seller_name||'-'}</td>
+                <td style="color:var(--blue);">${r.seller_email?`<a href="mailto:${r.seller_email}" style="color:var(--blue);text-decoration:none;">${r.seller_email}</a>`:'-'}</td>
+                <td>${r.seller_phone||'-'}</td>
+                <td>${r.seller_country?`<span class="badge badge-page">${r.seller_country}</span>`:'-'}</td>
+                <td style="text-align:center;">${r.total_products||'-'}</td>
+                <td>${r.suggested_service?`<span class="badge" style="background:var(--purple-light);color:var(--purple);border:1px solid #ddd4fe;">${r.suggested_service}</span>`:'-'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table></div>`;
+      });
+  }
+
+  function historyExport(id)       { window.location.href = '/history/export/' + id; }
+  function historyExportMailer(id) { window.location.href = '/history/export_mailer/' + id; }
+  function historyDelete(id) {
+    if (!confirm('Delete this session and all its data?')) return;
+    fetch('/history/delete/' + id, { method: 'DELETE' })
+      .then(() => loadHistory());
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    populateSettingsForm();
+    // Send current rules to backend on load
+    fetch('/save_rules', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(loadSettings())
+    });
+  });
+
+  function getTime() {
+    return new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function log(msg, type = '') {
+    const box = document.getElementById('logBox');
+    const line = document.createElement('div');
+    line.className = 'log-line ' + type;
+    line.innerHTML = `<span class="log-time">${getTime()}</span>${msg}`;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function setStatus(running) {
+    const pill = document.getElementById('statusPill');
+    const text = document.getElementById('statusText');
+    const btn = document.getElementById('startBtn');
+    if (running) {
+      pill.classList.add('running');
+      text.textContent = 'Scraping...';
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div><span>Running...</span>';
+    } else {
+      pill.classList.remove('running');
+      text.textContent = 'Idle';
+      btn.disabled = false;
+      btn.innerHTML = '<span>Start Scraping</span>';
+    }
+  }
+
+  function updateStats() {
+    const total = allResults.length;
+    const sponsored = allResults.filter(r => r.listing_type === 'Sponsored').length;
+    const organic = allResults.filter(r => r.listing_type === 'Organic').length;
+    const emails = allResults.filter(r => r.seller_email).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statSponsored').textContent = sponsored;
+    document.getElementById('statOrganic').textContent = organic;
+    document.getElementById('statEmails').textContent = emails;
+  }
+
+  function setProgress(current, total) {
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('progressLabel').textContent = total > 0 ? `${current} / ${total} processed (${pct}%)` : 'Ready';
+  }
+
+  function addRow(row) {
+    allResults.push(row);
+    updateStats();
+    renderTable();
+    document.getElementById('exportBtn').disabled = false;
+        document.getElementById('exportMailerBtn').disabled = false;
+    document.getElementById('mainSub').textContent = `Keyword: "${row.keyword}" — ${allResults.length} sellers found`;
+  }
+
+  function renderTable() {
+    let filtered = allResults;
+
+    if (activeFilter === 'Sponsored') filtered = filtered.filter(r => r.listing_type === 'Sponsored');
+    else if (activeFilter === 'Organic') filtered = filtered.filter(r => r.listing_type === 'Organic');
+    else if (activeFilter === 'email') filtered = filtered.filter(r => r.seller_email);
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(r =>
+        (r.title || '').toLowerCase().includes(q) ||
+        (r.seller_name || '').toLowerCase().includes(q) ||
+        (r.seller_email || '').toLowerCase().includes(q) ||
+        (r.asin || '').toLowerCase().includes(q) ||
+        (r.seller_country || '').toLowerCase().includes(q)
+      );
+    }
+
+    document.getElementById('resultCount').textContent = filtered.length + ' seller' + (filtered.length !== 1 ? 's' : '');
+
+    const tbody = document.getElementById('tableBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state">
+        <div class="empty-icon">😶</div>
+        <div class="empty-title">No results match</div>
+        <div class="empty-sub">Try a different filter or search term</div>
+      </div></td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(r => `
+      <tr>
+        <td>
+          <span class="badge ${r.listing_type === 'Sponsored' ? 'badge-sponsored' : 'badge-organic'}">
+            ${r.listing_type === 'Sponsored' ? '★' : '✓'} ${r.listing_type}
+          </span>
+        </td>
+        <td class="td-mono">${r.asin || '-'}</td>
+        <td class="td-title" title="${(r.title || '').replace(/"/g, '&quot;')}">${r.title || '-'}</td>
+        <td style="font-size:11px;color:var(--text2);max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${r.category || '-'}</td>
+        <td class="td-mono" style="white-space:nowrap;">${r.price || '-'}</td>
+        <td style="text-align:center;">
+          ${r.rating ? `<span style="font-weight:600;color:var(--accent-dark);">${r.rating}</span><span style="color:var(--text3);font-size:10px;">★</span>` : '-'}
+        </td>
+        <td class="td-mono" style="text-align:center;">${r.reviews ? Number(r.reviews).toLocaleString() : '-'}</td>
+        <td style="font-weight:500;">${r.seller_name || '-'}</td>
+        <td class="td-email">${r.seller_email ? `<a href="mailto:${r.seller_email}" style="color:var(--blue);text-decoration:none;">${r.seller_email}</a>` : '<span style="color:var(--text3)">-</span>'}</td>
+        <td class="td-mono">${r.seller_phone || '-'}</td>
+        <td>
+          ${r.seller_country && r.seller_country.trim() ? `<span class="badge badge-page">${r.seller_country.trim()}</span>` : '<span style="color:var(--text3)">-</span>'}
+        </td>
+        <td class="td-mono" style="text-align:center;">${r.total_products || '-'}</td>
+        <td>
+          ${r.suggested_service ? `<span class="badge" style="background:var(--purple-light);color:var(--purple);border:1px solid #ddd4fe;white-space:nowrap;">${r.suggested_service}</span>` : '-'}
+        </td>
+        <td><span class="badge badge-page">P${r.page}</span></td>
+      </tr>
+    `).join('');
+  }
+
+  function setFilter(filter, el) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTable();
+  }
+
+  function filterTable(val) {
+    searchQuery = val;
+    renderTable();
+  }
+
+  function startScrape() {
+    const keyword = document.getElementById('keyword').value.trim();
+    const pages = document.getElementById('pages').value;
+
+    if (!keyword) {
+      document.getElementById('keyword').focus();
+      document.getElementById('keyword').style.borderColor = 'var(--red)';
+      setTimeout(() => document.getElementById('keyword').style.borderColor = '', 2000);
+      return;
+    }
+
+    allResults = [];
+    renderTable();
+    updateStats();
+    setProgress(0, 0);
+    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('logBox').innerHTML = '';
+    document.getElementById('kwProgressWrap').style.display = 'none';
+    document.getElementById('mainSub').textContent = `Searching for: "${keyword}"`;
+
+    setStatus(true);
+    log(`Starting scrape: "${keyword}" | ${pages} page(s)`, 'info');
+
+    fetch('/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keyword, pages: parseInt(pages) })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        log('Error: ' + data.error, 'warn');
+        setStatus(false);
+        return;
+      }
+      startStream();
+    })
+    .catch(e => {
+      log('Connection error: ' + e.message, 'warn');
+      setStatus(false);
+    });
+  }
+
+  function startStream() {
+    if (eventSource) eventSource.close();
+    eventSource = new EventSource('/stream');
+
+    eventSource.onmessage = function(e) {
+      const msg = JSON.parse(e.data);
+
+      if (msg.type === 'status') {
+        log(msg.message, 'info');
+      } else if (msg.type === 'keyword') {
+        const wrap = document.getElementById('kwProgressWrap');
+        wrap.style.display = 'block';
+        document.getElementById('kwProgressLabel').textContent = `Keyword ${msg.current}/${msg.total}`;
+        document.getElementById('kwProgressCurrent').textContent = msg.keyword;
+        setProgress(0, 0);
+        log(`Starting keyword ${msg.current}/${msg.total}: "${msg.keyword}"`, 'info');
+      } else if (msg.type === 'keyword_done') {
+        log(`Finished "${msg.keyword}" — ${msg.count} sellers captured`, 'ok');
+      } else if (msg.type === 'progress') {
+        setProgress(msg.current, msg.total);
+        log(msg.message, '');
+      } else if (msg.type === 'result') {
+        addRow(msg.row);
+        log(`Captured: ${msg.row.seller_name} (${msg.row.listing_type})`, 'ok');
+      } else if (msg.type === 'done') {
+        log(`All done! ${msg.total} sellers captured total.`, 'ok');
+        setStatus(false);
+        setProgress(allResults.length, allResults.length);
+        document.getElementById('kwProgressWrap').style.display = 'none';
+        eventSource.close();
+        if (allResults.length > 0) {
+          document.getElementById('exportBtn').disabled = false;
+          document.getElementById('exportMailerBtn').disabled = false;
+        }
+      }
+    };
+
+    eventSource.onerror = function() {
+      log('Stream connection lost.', 'warn');
+      setStatus(false);
+      eventSource.close();
+    };
+  }
+
+  function exportCSV() {
+    window.location.href = '/export';
+    log('Full CSV export downloaded.', 'ok');
+  }
+
+  function exportBulkMailer() {
+    window.location.href = '/export_bulkmailer';
+    log('Bulk Mailer CSV exported. Open in Google Sheets and copy to your Sellers sheet.', 'ok');
+  }
+
+  document.getElementById('keyword').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') startScrape();
+  });
+</script>
+</body>
+</html>
